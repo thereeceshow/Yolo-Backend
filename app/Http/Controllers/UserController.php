@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -15,9 +16,9 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        return $request->user();
     }
 
     /**
@@ -25,28 +26,28 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
+    public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|max:64',
             'password' => 'required|string|min:8',
         ]);
-                
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             return response(['message' => 'Validation errors', 'errors' =>  $validator->errors(), 'status' => false], 422);
         }
-        
+
         $input = $request->all();
         $input['password'] = Hash::make($input['password']);
-        
+
         // Creating new user
         $user = User::create($input);
-        
+
         /**Take note of this: Your user authentication access token is generated here **/
         $data['token'] =  $user->createToken('YoloFund')->accessToken;
         $data['user_data'] = $user;
-        
+
         return response(['data' => $data, 'message' => 'Account created successfully!', 'status' => true]);
     }
 
@@ -104,5 +105,33 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+    }
+    public function logout(Request $request)
+    {
+        if (Auth::check()) {
+            Auth::user()->token()->revoke();
+            return response()->json(['success' => 'logout_success'], 200);
+        } else {
+            return response()->json(['error' => 'api.something_went_wrong'], 500);
+        }
+    }
+
+    public function login(Request $request)
+    {
+        Log::debug("login");
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required'
+        ]);
+
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            $user = Auth::user();
+
+            /**Take note of this: Your user authentication access token is generated here **/
+            $data['token'] =  $user->createToken('YoloFund')->accessToken;
+            $data['user_data'] = $user;
+
+            return response(['data' => $data, 'message' => 'Account created successfully!', 'status' => true]);
+        }
     }
 }

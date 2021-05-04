@@ -15,8 +15,19 @@ use App\Http\Controllers\UserController;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
-Route::post('/register', [UserController::class, 'create']);
+Route::prefix('auth')->group(function () {
+
+    Route::post('/register', [UserController::class, 'register']);
+    Route::post('/login', [UserController::class, 'login']);
+
+    Route::group(['middleware' => ['auth:api']], function () {
+        // gets user with all data
+        Route::get('/user', [UserController::class, 'index']);
+        // log out user
+        Route::get('/logout', [UserController::class, 'logout']);
+    });
+});
