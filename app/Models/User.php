@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Stock;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -27,6 +28,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'cash',
+        'realized_gain'
+
     ];
 
     /**
@@ -38,4 +42,13 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected $with = [
+        'stocks'
+    ];
+
+     public function stocks()
+    {
+        return $this->hasMany(Stock::class);
+    }
 }

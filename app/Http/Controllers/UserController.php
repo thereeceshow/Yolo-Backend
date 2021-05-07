@@ -40,6 +40,9 @@ class UserController extends Controller
 
         $input = $request->all();
         $input['password'] = Hash::make($input['password']);
+        $input['cash'] = 500000;
+        $input['realized_gain'] = 0;
+        // $input['stocks'] = []; // CREATE EMPTY ARRAY OF STOCKS
 
         // Creating new user
         $user = User::create($input);
@@ -47,6 +50,7 @@ class UserController extends Controller
         /**Take note of this: Your user authentication access token is generated here **/
         $data['token'] =  $user->createToken('YoloFund')->accessToken;
         $data['user_data'] = $user;
+        // $data['stocks'] = $user; // SET STOCK ARRAY TO NEW USER
 
         return response(['data' => $data, 'message' => 'Account created successfully!', 'status' => true]);
     }
