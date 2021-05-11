@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\StockController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,5 +30,7 @@ Route::prefix('auth')->group(function () {
         Route::get('/user', [UserController::class, 'index']);
         // log out user
         Route::get('/logout', [UserController::class, 'logout']);
+        // make trade
+        Route::post('/trade', [StockController::class, 'store']);
     });
 });

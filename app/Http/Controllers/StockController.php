@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Stock;
 use Illuminate\Http\Request;
+use App\Models\User;
+
+use Illuminate\Support\Facades\Log;
 
 class StockController extends Controller
 {
@@ -35,7 +38,58 @@ class StockController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
+        $user = $request->user();
+        $stock = new Stock;
+        $stock->user_id = $user->id;
+        $stock->ticker_sym = $request->ticker_sym;
+        $stock->transaction_price = $request->transaction_price;
+        $stock->buy = $request->buy;
+        $stock->shares = $request->shares;
+            Log::debug("store function line 49");
+        if ($stock->buy == 0) { //SELL
+            $stocks = $user->stocks()->where('ticker_sym', '=', $stock->ticker_sym)->get();
+            $totalStocks = 0;
+            Log::debug(count($stocks));
+            for ($i = 0; $i < count($stocks); $i++) {
+                if ($stocks[$i]->buy == 1) {
+                    $totalStocks += $stocks[$i]->shares;
+                }
+                if ($stocks[$i]->buy == 0) {
+                    $totalStocks -= $stocks[$i]->shares;
+            }
+
+            if ($totalStocks >= $stock->shares) {
+                Log::debug("sell stock " . $stock->ticker_sym);
+                $this->sellStock($stock, $user);
+            }
+        }
+
+
+        // $stock->save();
+        // $user->removeCash(33);
+        }
+
+        if ($stock->buy == 1) {
+            if ($user->cash >= ($stock->transaction_price * $stock->shares)) {
+                Log::debug("buy stock " . $stock->ticker_sym);
+            $this->buyStock($stock, $user);
+            }
+        }
+
+    }
+
+    public function buyStock(&$stock, &$user) {
+        $user->cash = $user->cash - ($stock->transaction_price * $stock->shares);
+        $stock->save();
+        $user->save();
+    }
+
+    public function sellStock(&$stock, &$user) {
+        $user->cash = $user->cash + ($stock->transaction_price * $stock->shares);
+        $stock->save();
+        $user->save();
+
     }
 
     /**
